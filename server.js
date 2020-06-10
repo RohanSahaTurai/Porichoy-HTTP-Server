@@ -62,7 +62,10 @@ var Result = "";
 
 function handleResponse(message)
 {
-  Result = message.slice(9);
+  if (message.includes('NO MATCH'))
+    Result = 'NO MATCH'
+  else
+    Result = message.slice(9);
 
   console.log('Result = ' + Result);
 
