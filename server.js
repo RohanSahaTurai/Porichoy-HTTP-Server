@@ -10,6 +10,7 @@ mqttClient.on("connect", function(){
 
   console.log("connected to MQTT Broker");
   mqttClient.subscribe("Image");
+  mqttClient.subscribe("Result");
 });
 
 mqttClient.on("error", function(error) {
@@ -19,7 +20,8 @@ mqttClient.on("error", function(error) {
 });
 
 var Callback_Requested = false;
-var Callback_Handled = false;
+var Callback1_Handled = false;
+var Callback2_Handled = false;
 
 mqttClient.on("message", function(topic, message) {
 
@@ -35,6 +37,9 @@ mqttClient.on("message", function(topic, message) {
   {
     case 'Image':
       return handleImageReceived(message);
+    
+    case 'Result':
+      return handleResponse(message);
   }
 
 });
@@ -48,12 +53,21 @@ function handleImageReceived (message)
 
     console.log('File Saved: ' + file);
     
-    Callback_Handled = true;
+    Callback1_Handled = true;
   });
 
 };
 
+var Result = "";
 
+function handleResponse(message)
+{
+  Result = message.slice(9);
+
+  console.log('Result = ' + Result);
+
+  Callback2_Handled = true;
+}
 
 /************************************************************************
  * MongoDB Connection
@@ -88,14 +102,21 @@ const JSONStream = require('JSONStream');
 
 const express = require('express');
 const app = express();
+
 const path = require('path');
 
+const ejs = require('ejs');
+
+app.set('view engine', 'ejs');
+
 app.use (express.static(path.join(__dirname, "public")));
+
 
 app.get('/', (req, res) => {
 
   res.sendFile(path.join(__dirname + '/public/actions.html'));
 });
+
 
 app.get('/ViewDatabase', function(req, res) {
 
@@ -105,10 +126,12 @@ app.get('/ViewDatabase', function(req, res) {
 
 });
 
+
 app.get('/Controls', (req, res) => {
 
   res.sendFile(path.join(__dirname + '/public/controls.html'));
 });
+
 
 app.get('/Controls/AutoOn', (req, res) => {
 
@@ -116,11 +139,14 @@ app.get('/Controls/AutoOn', (req, res) => {
   res.sendFile(path.join(__dirname + '/public/controls.html'));
 });
 
+
 app.get('/Controls/AutoOff', (req, res) => {
 
   mqttClient.publish('Control', '010000');
   res.sendFile(path.join(__dirname + '/public/controls.html'));
 });
+
+
 
 app.use("/Controls/Capture", (req, res, next) => {
 
@@ -134,7 +160,7 @@ app.use("/Controls/Capture", (req, res, next) => {
 
 app.get('/Controls/Capture', (req, res) => {
 
-  if (Callback_Handled === false)
+  if (Callback1_Handled === false)
     res.send("Error Capturing Image. Please try again later");
     
   else
@@ -157,12 +183,41 @@ app.get('/Controls/Capture', (req, res) => {
     });
   }
 
-  Callback_Handled    = false;
+  Callback1_Handled   = false;
   Callback_Requested  = false;
 });
+
+
+
+app.use('/Controls/CaptureRecognize', (req, res, next) => {
+
+  Callback_Requested = true;
+
+  mqttClient.publish('Control', '020100');
+
+  setTimeout(() => { next();}, 8000);
+});
+
+
+app.get('/Controls/CaptureRecognize', (req, res) => {
+
+  //TODO: Delete the image file
+  
+  if (!Callback1_Handled || !Callback2_Handled)
+    res.send("Error Capturing Image. Please try again later");
+
+  else
+    res.render(path.join(__dirname + '/public/controls_img_recog'), {data: {Response: Result }});
+
+
+  Callback1_Handled   = false;
+  Callback2_Handled   = false;
+  Callback_Requested  = false;
+  
+});
+
 
 app.listen(3000, function() {
 
   console.log('Listening on port 3000');
-
 });

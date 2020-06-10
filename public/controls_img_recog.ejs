@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Porichoy - Action</title>
+        
+        <style>
+
+        button 
+        {   
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            cursor: pointer;
+            width: 30%;
+        }
+
+        button:hover { opacity: 0.8; }
+
+        .container 
+        { 
+            padding: 16px; 
+            border: 3px solid #f1f1f1;
+            text-align: center;
+        }
+        
+        .titleBox 
+        {
+            border: 5px outset red;
+            background-color: lightblue;
+            text-align: center;
+        }
+
+        </style>
+    </head>
+   
+    <body>
+
+        <h1>Porichoy - IoT Face Recognition Module</h1>
+
+        <div class="titleBox">
+            <h2>Control the Device Remotely</h2>
+        </div>
+        
+        <div class="container">
+            
+            <form action = "http://142.93.62.203:3000/Controls/AutoOn" method="get">
+                <button type = "submit">Turn On Auto Capture</button>
+            </form>
+
+            <form action = "http://142.93.62.203:3000/Controls/AutoOff" method="get">
+                <button type = "submit">Turn Off Auto Capture</button>
+            </form>
+
+        </div><br>
+
+        <div class = "container">
+            <img src="/temp.jpg" alt="Captured Image" style="width:800px;height:600px;">
+        </div><br>
+
+        <div class = "container">
+            <h3> Facial Recognition Response = <%= data.Response %></h3>
+        </div>
+
+        <div class="container">
+            
+            <form action = "http://142.93.62.203:3000/Controls/Capture" method="get">
+                <button type = "submit">Capture Image</button>
+            </form>
+
+            <form action = "http://142.93.62.203:3000/Controls/CaptureRecognize" method="get">
+                <button type = "submit">Capture Image and Recognize</button>
+            </form>
+
+        </div>
+
+    </body>
+</html>
